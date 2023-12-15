@@ -10,7 +10,7 @@
 
 ### Installation
 
-Execute our dumped sql file `shems.sql` in your database.
+Execute our dumped sql file `shems.sql` in your database through [https://drive.google.com/file/d/1uVjZLjNxY98P01vBsewHrWK6TUObhdmO/view?usp=drive_link](https://drive.google.com/file/d/1uVjZLjNxY98P01vBsewHrWK6TUObhdmO/view?usp=drive_link).
 
 Change the database credentials in `src/main/resources/application.properties` to match your database.
 
