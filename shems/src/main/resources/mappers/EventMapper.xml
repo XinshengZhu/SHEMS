@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyu.shems.mapper.EventMapper">
+  <resultMap id="BaseResultMap" type="com.nyu.shems.entity.Event">
+    <id column="evid" jdbcType="INTEGER" property="evid" />
+    <result column="enid" jdbcType="INTEGER" property="enid" />
+    <result column="occurred_time" jdbcType="TIMESTAMP" property="occurredTime" />
+    <result column="event_label" jdbcType="VARCHAR" property="eventLabel" />
+    <result column="changed_value" jdbcType="DECIMAL" property="changedValue" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    evid, enid, occurred_time, event_label, changed_value
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from Event
+    where evid = #{evid,jdbcType=INTEGER}
+  </select>
+  <select id="dailyEnergyConsumption" resultType="HashMap">
+    SELECT
+    DATE_FORMAT(occurred_time, '%Y-%m-%d') AS day, SUM(changed_value) as daily_energy_consumption
+    FROM Event NATURAL JOIN Enrollment
+    WHERE event_label = 'energy use' AND slid = #{slid,jdbcType=INTEGER}
+    AND DATE_FORMAT(occurred_time, '%Y-%m-%d') BETWEEN #{start,jdbcType=VARCHAR} AND #{end,jdbcType=VARCHAR}
+    GROUP BY DATE_FORMAT(occurred_time, '%Y-%m-%d')
+  </select>
+  <select id="monthlyEnergyConsumption" resultType="HashMap">
+    SELECT
+    DATE_FORMAT(occurred_time, '%Y-%m') AS month, SUM(changed_value) as monthly_energy_consumption
+    FROM Event NATURAL JOIN Enrollment
+    WHERE event_label = 'energy use' AND slid = #{slid,jdbcType=INTEGER}
+    AND DATE_FORMAT(occurred_time, '%Y-%m') BETWEEN #{start,jdbcType=VARCHAR} AND #{end,jdbcType=VARCHAR}
+    GROUP BY DATE_FORMAT(occurred_time, '%Y-%m')
+  </select>
+  <select id="enrollmentEnergyConsumption" resultType="HashMap">
+    SELECT
+    enid, SUM(changed_value) as enrollment_energy_consumption
+    FROM Event NATURAL JOIN Enrollment
+    WHERE event_label = 'energy use' AND slid = #{slid,jdbcType=INTEGER}
+    AND DATE_FORMAT(occurred_time, '%Y-%m-%d') BETWEEN #{start,jdbcType=VARCHAR} AND #{end,jdbcType=VARCHAR}
+    GROUP BY enid
+  </select>
+  <select id="percentageOfSimilarServiceAverage" resultType="HashMap">
+    WITH TotalEnergy AS (
+      SELECT sl.slid, sl.cid, sl.area, sl.occupant_num, SUM(ev.changed_value) AS total_energy
+      FROM ServiceLocation sl NATURAL JOIN Enrollment en NATURAL JOIN Event ev
+      WHERE ev.event_label = 'energy use'
+      AND DATE_FORMAT(ev.occurred_time, '%Y-%m-%d') BETWEEN #{start,jdbcType=VARCHAR} AND #{end,jdbcType=VARCHAR}
+      GROUP BY sl.slid
+    ),
+    AvgEnergySimilar AS (
+      SELECT te1.slid, AVG(te2.total_energy) AS avg_similar_energy
+      FROM TotalEnergy te1 JOIN TotalEnergy te2 ON te1.slid != te2.slid
+      WHERE te2.area BETWEEN te1.area * 0.95 AND te1.area * 1.05
+        AND te2.occupant_num BETWEEN te1.occupant_num - 1 AND te1.occupant_num + 1
+      GROUP BY te1.slid
+    )
+    SELECT te.slid, te.total_energy, aes.avg_similar_energy, (te.total_energy / aes.avg_similar_energy) * 100 AS percentage_of_average
+    FROM TotalEnergy te NATURAL JOIN AvgEnergySimilar aes
+    WHERE te.cid = #{cid,jdbcType=INTEGER}
+  </select>
+  <select id="hourlyEnergyCost" resultType="HashMap">
+    SELECT
+    DATE_FORMAT(occurred_time, '%H') AS hour, SUM(changed_value) as hourly_energy_consumption, SUM(changed_value) * Price.price_per_kwh AS hourly_energy_cost
+    FROM Event NATURAL JOIN Enrollment NATURAL JOIN ServiceLocation
+    JOIN Price ON ServiceLocation.zipcode = Price.zipcode AND DATE_FORMAT(occurred_time, '%H') = Price.hour
+    WHERE event_label = 'energy use' AND enid = #{enid,jdbcType=INTEGER}
+    AND DATE_FORMAT(occurred_time, '%Y-%m-%d') = #{date,jdbcType=VARCHAR}
+    GROUP BY DATE_FORMAT(occurred_time, '%H'), Price.price_per_kwh
+    ORDER BY DATE_FORMAT(occurred_time, '%H')
+  </select>
+<select id="dailyEnergyCost" resultType="HashMap">
+  SELECT
+  DATE_FORMAT(occurred_time, '%Y-%m-%d') AS day, SUM(changed_value * price_per_kwh) as daily_energy_cost
+  FROM Event NATURAL JOIN Enrollment NATURAL JOIN ServiceLocation
+  JOIN Price ON ServiceLocation.zipcode = Price.zipcode AND DATE_FORMAT(occurred_time, '%H') = Price.hour
+  WHERE event_label = 'energy use' AND slid = #{slid,jdbcType=INTEGER}
+  AND DATE_FORMAT(occurred_time, '%Y-%m-%d') BETWEEN #{start,jdbcType=VARCHAR} AND #{end,jdbcType=VARCHAR}
+  GROUP BY DATE_FORMAT(occurred_time, '%Y-%m-%d')
+</select>
+<select id="monthlyEnergyCost" resultType="HashMap">
+  SELECT
+    DATE_FORMAT(occurred_time, '%Y-%m') AS month, SUM(changed_value * price_per_kwh) as monthly_energy_cost
+  FROM Event NATURAL JOIN Enrollment NATURAL JOIN ServiceLocation
+    JOIN Price ON ServiceLocation.zipcode = Price.zipcode AND DATE_FORMAT(occurred_time, '%H') = Price.hour
+  WHERE event_label = 'energy use' AND slid = #{slid,jdbcType=INTEGER}
+    AND DATE_FORMAT(occurred_time, '%Y-%m') BETWEEN #{start,jdbcType=VARCHAR} AND #{end,jdbcType=VARCHAR}
+  GROUP BY DATE_FORMAT(occurred_time, '%Y-%m')
+</select>
+<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from Event
+    where evid = #{evid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" keyColumn="evid" keyProperty="evid" parameterType="com.nyu.shems.entity.Event" useGeneratedKeys="true">
+    insert into Event (enid, occurred_time, event_label, 
+      changed_value)
+    values (#{enid,jdbcType=INTEGER}, #{occurredTime,jdbcType=TIMESTAMP}, #{eventLabel,jdbcType=VARCHAR}, 
+      #{changedValue,jdbcType=DECIMAL})
+  </insert>
+  <insert id="insertSelective" keyColumn="evid" keyProperty="evid" parameterType="com.nyu.shems.entity.Event" useGeneratedKeys="true">
+    insert into Event
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="enid != null">
+        enid,
+      </if>
+      <if test="occurredTime != null">
+        occurred_time,
+      </if>
+      <if test="eventLabel != null">
+        event_label,
+      </if>
+      <if test="changedValue != null">
+        changed_value,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="enid != null">
+        #{enid,jdbcType=INTEGER},
+      </if>
+      <if test="occurredTime != null">
+        #{occurredTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="eventLabel != null">
+        #{eventLabel,jdbcType=VARCHAR},
+      </if>
+      <if test="changedValue != null">
+        #{changedValue,jdbcType=DECIMAL},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.nyu.shems.entity.Event">
+    update Event
+    <set>
+      <if test="enid != null">
+        enid = #{enid,jdbcType=INTEGER},
+      </if>
+      <if test="occurredTime != null">
+        occurred_time = #{occurredTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="eventLabel != null">
+        event_label = #{eventLabel,jdbcType=VARCHAR},
+      </if>
+      <if test="changedValue != null">
+        changed_value = #{changedValue,jdbcType=DECIMAL},
+      </if>
+    </set>
+    where evid = #{evid,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.nyu.shems.entity.Event">
+    update Event
+    set enid = #{enid,jdbcType=INTEGER},
+      occurred_time = #{occurredTime,jdbcType=TIMESTAMP},
+      event_label = #{eventLabel,jdbcType=VARCHAR},
+      changed_value = #{changedValue,jdbcType=DECIMAL}
+    where evid = #{evid,jdbcType=INTEGER}
+  </update>
+</mapper>

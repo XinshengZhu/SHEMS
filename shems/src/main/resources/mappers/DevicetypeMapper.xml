@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyu.shems.mapper.DevicetypeMapper">
+  <resultMap id="BaseResultMap" type="com.nyu.shems.entity.Devicetype">
+    <id column="dtid" jdbcType="INTEGER" property="dtid" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    dtid, `type`
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from DeviceType
+    where dtid = #{dtid,jdbcType=INTEGER}
+  </select>
+    <select id="getAll" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from DeviceType
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from DeviceType
+    where dtid = #{dtid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" keyColumn="dtid" keyProperty="dtid" parameterType="com.nyu.shems.entity.Devicetype" useGeneratedKeys="true">
+    insert into DeviceType (`type`)
+    values (#{type,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" keyColumn="dtid" keyProperty="dtid" parameterType="com.nyu.shems.entity.Devicetype" useGeneratedKeys="true">
+    insert into DeviceType
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="type != null">
+        `type`,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="type != null">
+        #{type,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.nyu.shems.entity.Devicetype">
+    update DeviceType
+    <set>
+      <if test="type != null">
+        `type` = #{type,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where dtid = #{dtid,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.nyu.shems.entity.Devicetype">
+    update DeviceType
+    set `type` = #{type,jdbcType=VARCHAR}
+    where dtid = #{dtid,jdbcType=INTEGER}
+  </update>
+</mapper>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyu.shems.mapper.PriceMapper">
+  <resultMap id="BaseResultMap" type="com.nyu.shems.entity.Price">
+    <id column="zipcode" jdbcType="VARCHAR" property="zipcode" />
+    <id column="hour" jdbcType="INTEGER" property="hour" />
+    <result column="price_per_kwh" jdbcType="DECIMAL" property="pricePerKwh" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    zipcode, `hour`, price_per_kwh
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="com.nyu.shems.entity.PriceKey" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from Price
+    where zipcode = #{zipcode,jdbcType=VARCHAR}
+      and `hour` = #{hour,jdbcType=INTEGER}
+  </select>
+  <select id="getPrice" resultType="HashMap">
+    SELECT hour, price_per_kwh
+    FROM Price JOIN ServiceLocation ON Price.zipcode = ServiceLocation.zipcode
+    WHERE ServiceLocation.slid = #{slid,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="com.nyu.shems.entity.PriceKey">
+    delete from Price
+    where zipcode = #{zipcode,jdbcType=VARCHAR}
+      and `hour` = #{hour,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" keyColumn="zipcode" keyProperty="zipcode" parameterType="com.nyu.shems.entity.Price" useGeneratedKeys="true">
+    insert into Price (`hour`, price_per_kwh)
+    values (#{hour,jdbcType=INTEGER}, #{pricePerKwh,jdbcType=DECIMAL})
+  </insert>
+  <insert id="insertSelective" keyColumn="zipcode" keyProperty="zipcode" parameterType="com.nyu.shems.entity.Price" useGeneratedKeys="true">
+    insert into Price
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="hour != null">
+        `hour`,
+      </if>
+      <if test="pricePerKwh != null">
+        price_per_kwh,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="hour != null">
+        #{hour,jdbcType=INTEGER},
+      </if>
+      <if test="pricePerKwh != null">
+        #{pricePerKwh,jdbcType=DECIMAL},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.nyu.shems.entity.Price">
+    update Price
+    <set>
+      <if test="pricePerKwh != null">
+        price_per_kwh = #{pricePerKwh,jdbcType=DECIMAL},
+      </if>
+    </set>
+    where zipcode = #{zipcode,jdbcType=VARCHAR}
+      and `hour` = #{hour,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.nyu.shems.entity.Price">
+    update Price
+    set price_per_kwh = #{pricePerKwh,jdbcType=DECIMAL}
+    where zipcode = #{zipcode,jdbcType=VARCHAR}
+      and `hour` = #{hour,jdbcType=INTEGER}
+  </update>
+</mapper>

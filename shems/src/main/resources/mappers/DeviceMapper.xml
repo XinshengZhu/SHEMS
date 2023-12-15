@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nyu.shems.mapper.DeviceMapper">
+  <resultMap id="BaseResultMap" type="com.nyu.shems.entity.Device">
+    <id column="did" jdbcType="INTEGER" property="did" />
+    <result column="dtid" jdbcType="INTEGER" property="dtid" />
+    <result column="model" jdbcType="VARCHAR" property="model" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    did, dtid, model
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from Device
+    where did = #{did,jdbcType=INTEGER}
+  </select>
+  <select id="getAll" resultType="com.nyu.shems.entity.Device">
+    select
+    <include refid="Base_Column_List" />
+    from Device
+  </select>
+  <select id="getInfoBySlid" resultType="HashMap">
+    SELECT
+    e.enid AS enid, CONCAT(dt.type, '--', d.model) AS device_info
+    FROM Enrollment e NATURAL JOIN Device d NATURAL JOIN DeviceType dt
+    WHERE e.slid = #{slid}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from Device
+    where did = #{did,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" keyColumn="did" keyProperty="did" parameterType="com.nyu.shems.entity.Device" useGeneratedKeys="true">
+    insert into Device (dtid, model)
+    values (#{dtid,jdbcType=INTEGER}, #{model,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" keyColumn="did" keyProperty="did" parameterType="com.nyu.shems.entity.Device" useGeneratedKeys="true">
+    insert into Device
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="dtid != null">
+        dtid,
+      </if>
+      <if test="model != null">
+        model,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="dtid != null">
+        #{dtid,jdbcType=INTEGER},
+      </if>
+      <if test="model != null">
+        #{model,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.nyu.shems.entity.Device">
+    update Device
+    <set>
+      <if test="dtid != null">
+        dtid = #{dtid,jdbcType=INTEGER},
+      </if>
+      <if test="model != null">
+        model = #{model,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where did = #{did,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.nyu.shems.entity.Device">
+    update Device
+    set dtid = #{dtid,jdbcType=INTEGER},
+      model = #{model,jdbcType=VARCHAR}
+    where did = #{did,jdbcType=INTEGER}
+  </update>
+</mapper>

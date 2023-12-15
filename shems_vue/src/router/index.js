@@ -1,0 +1,107 @@
+import {createRouter,createWebHistory} from 'vue-router'
+
+export default createRouter({
+    history:createWebHistory(),
+    routes:[
+        {
+            path:'/',
+            redirect:'/login'
+        },
+        {
+            path:'/login',
+            name:'login',
+            components:{
+                default:()=>import('../components/Login'),
+            },
+            meta:{
+                title:'Login'
+            }
+
+        },
+        {
+            path:'/register',
+            name:'register',
+            components:{
+                default:()=>import('../components/Register'),
+            },
+            meta:{
+                title:'Register'
+            }
+
+        },
+        {
+            path:'/home',
+            name:'home',
+            component:()=>import('../components/Home'),
+            meta:{
+                title:'Home'
+            },
+            children:[
+                {
+                    path:'/serviceLocation',
+                    name:'serviceLocation',
+                    component:()=>import('../components/ServiceLocation'),
+                    meta:{
+                        title:'Service Location'
+                    }
+                },
+                {
+                    path:'/deviceEnrollment',
+                    name:'deviceEnrollment',
+                    component:()=>import('../components/DeviceEnrollment'),
+                    meta:{
+                        title:'Device Enrollment'
+                    }
+                },
+                {
+                    path:'/energyCost',
+                    name:'energyCost',
+                    component:()=>import('../components/EnergyCost'),
+                    meta:{
+                        title:'Energy Cost'
+                    }
+                },
+                {
+                    path:'/chart1',
+                    name:'chart1',
+                    component:()=>import('../components/Chart1'),
+                    meta:{
+                        title:'Chart1'
+                    }
+                },
+                {
+                    path:'/chart2',
+                    name:'chart2',
+                    component:()=>import('../components/Chart2'),
+                    meta:{
+                        title:'Chart2'
+                    }
+                },
+                {
+                    path:'/chart3',
+                    name:'chart3',
+                    component:()=>import('../components/Chart3'),
+                    meta:{
+                        title:'Chart3'
+                    }
+                },
+                {
+                    path:'/chart4',
+                    name:'chart4',
+                    component:()=>import('../components/Chart4'),
+                    meta:{
+                        title:'Chart4'
+                    }
+                },
+                {
+                    path:'/chart5',
+                    name:'chart5',
+                    component:()=>import('../components/Chart5'),
+                    meta:{
+                        title:'Chart5'
+                    }
+                }
+            ]
+        },
+    ]
+})
